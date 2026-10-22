@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burn Pile – Card Game</title>
+<style>
+:root{color-scheme:dark;--w:62px;--gold:#d4af37;--navy:#0b1a3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 30%,#14543c,#082117 70%);color:#f1ead6;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:#1b1400;background:linear-gradient(#f1d673,#c9a227);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+button:disabled{opacity:.4;cursor:not-allowed}button.alt{background:#1c3a2d;color:#f1ead6;border:1px solid #3d6b57}button.on{outline:3px solid #fff}
+.card{isolation:isolate;width:var(--w);height:calc(var(--w)*1.4);border-radius:calc(var(--w)*.1);background:#fffdf6;color:#111;position:relative;flex:none;box-shadow:0 2px 6px #0009;font-family:Georgia,serif;user-select:none;transition:transform .15s,box-shadow .15s,opacity .15s}
+.card.red{color:#c0192b}.card.sp{background:linear-gradient(#fffdf6,#f1e3b8)}.card.jk{background:linear-gradient(135deg,#ffe0f0,#d9f0ff,#fff3c4)}
+.c{z-index:2;position:absolute;font-weight:700;font-size:calc(var(--w)*.22);line-height:1;text-align:center}.tl{top:5%;left:7%}.br{bottom:5%;right:7%;transform:rotate(180deg)}
+.mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big{font-size:calc(var(--w)*.5);font-weight:700}.ic{font-size:calc(var(--w)*.26)}
+.as{position:absolute;bottom:-1px;left:0;right:0;text-align:center;font-size:calc(var(--w)*.17);background:#000a;color:#fff;border-radius:0 0 6px 6px;font-style:normal}
+.back{border:2px solid var(--gold);background:radial-gradient(circle,#d4af37 0 9%,transparent 10%),repeating-linear-gradient(45deg,#0b1a3a 0 6px,#18306a 6px 7px)}
+.back::after{content:"✦";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:calc(var(--w)*.5)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;gap:8px}.top b{font-size:18px}
+.opps{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:4px 8px}
+.opp{--w:34px;background:#0006;border:2px solid transparent;border-radius:12px;padding:6px 10px;text-align:center;min-width:130px}
+.opp.turn,.me.turn{border-color:var(--gold);box-shadow:0 0 16px var(--gold)}.opp.done{opacity:.5}
+.row{display:flex;justify-content:center;gap:3px;margin-top:3px;min-height:12px;align-items:center}.opp .ic{display:none}
+.midrow{display:flex;justify-content:center;align-items:center;gap:20px;padding:14px 8px}
+.stack,.pilebox{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pile{display:flex;align-items:center;justify-content:center;min-width:calc(var(--w)*2.4);height:calc(var(--w)*1.5)}.pile .card+.card{margin-left:calc(var(--w)*-.6)}
+.slot{width:var(--w);height:calc(var(--w)*1.4);border:2px dashed #3d6b57;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.deck{position:relative;width:var(--w);height:calc(var(--w)*1.4);margin:6px 0 0 6px}.deck .card{position:absolute;top:0;left:0}.deck .card:nth-child(2){top:-3px;left:-3px}.deck .card:nth-child(3){top:-6px;left:-6px}
+.flash{animation:fl .9s}@keyframes fl{0%,100%{background:transparent}30%{background:#ff7a1a55}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 8px}.chip{background:#0007;border:1px solid #3d6b57;border-radius:99px;padding:3px 10px;font-size:13px}.chip.warn{border-color:#ff8a3d;color:#ffd2ad}
+.status{text-align:center;padding:8px;font-weight:600}
+.me{border:2px solid transparent;border-radius:14px;margin:4px 8px;padding:6px}.me .row{gap:6px;margin:4px 0}
+.hand{display:flex;flex-wrap:wrap;justify-content:center;padding-top:16px}.hand{padding-bottom:calc(var(--w)*.5)}.hand .card{margin:0 calc(var(--w)*-.12) calc(var(--w)*-.5)}
+.card.ok{cursor:pointer}.card.ok:hover{transform:translateY(-8px)}.card.no{filter:brightness(.55)}.card.bad{box-shadow:0 0 0 3px #ff3b4d,0 2px 6px #0009}.dock{margin-top:4px}.me .row{--w:50px}.midrow{padding:8px!important}
+.fig{position:absolute;left:23%;right:23%;top:11%;bottom:11%;border:1px solid #b99a3a;background:#fffaf0;display:flex;flex-direction:column;border-radius:3px;overflow:hidden}.fig>div{flex:1;min-height:0}.fig svg{width:100%;height:100%;display:block}.fig .fl{transform:rotate(180deg)}
+.card.burning{box-shadow:0 0 0 2px #ff9a1a,0 0 14px 5px #ff5a00!important;animation:flick .7s infinite alternate}
+@keyframes flick{from{filter:brightness(1)}to{filter:brightness(1.18) saturate(1.3)}}
+.card.bad::before{content:"";position:absolute;inset:0;border-radius:inherit;background:#e0182dd0;mix-blend-mode:multiply;z-index:3}
+.card.hl{box-shadow:0 0 0 2px #7bd88f,0 2px 6px #0009}.card.sel{transform:translateY(-16px);box-shadow:0 0 0 3px var(--gold),0 6px 12px #000a}
+.card.pick{cursor:pointer;box-shadow:0 0 0 2px #7bd88f}.ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px}
+.log{max-height:120px;overflow:auto;font-size:13px;background:#0006;border-radius:10px;padding:6px 10px;margin:8px}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.box{background:#10261d;border:2px solid var(--gold);border-radius:14px;padding:18px;max-width:560px;max-height:85vh;overflow:auto}.box h3{margin:0 0 10px}.box li{margin:3px 0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+#toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:#000c;border:1px solid var(--gold);padding:8px 14px;border-radius:10px;z-index:60;display:none;max-width:90%}
+.menu{max-width:440px;margin:6vh auto;padding:20px;text-align:center}.menu h1{font-size:34px;margin:0}.menu .opts{justify-content:center;margin:8px 0 16px}
+@media(max-width:600px){:root{--w:46px}.me .row{--w:38px}.opp{--w:28px;min-width:100px}}
+</style></head><body>
+<div id="app"></div><div id="modal"></div><div id="toast"></div>
+<script>/* Card-shedding game rules engine. No DOM. Works in browser (window.CardEngine) and Node. */
+(function (root) {
+'use strict';
+
+const RANKS = ['4','5','6','7','8','9','10','J','Q','K','3','2','A','JOKER']; // low -> high (custom hierarchy)
+const PLAIN = RANKS.slice(0, 13);
+const STR = {}; RANKS.forEach((r, i) => STR[r] = i);
+const WILD = new Set(['2','3','10','A']);   // playable on anything (subject to restrictions)
+const FACE = new Set(['J','Q','K']);
+const LOW = new Set(['4','5','6','7']);
+const SUITS = ['S','H','D','C'];
+const NO_FINISH = new Set(['6','9','JOKER']);
+const MAX_TURNS = 1500;
+const LABEL = { J:'Jack', Q:'Queen', K:'King', A:'Ace', JOKER:'Joker' };
+const NUMW = ['','a','two','three','four','five','six','seven','eight'];
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function createDeck(jokers = 2) {
+  const cards = []; let id = 0;
+  for (const s of SUITS) for (const r of PLAIN) cards.push({ id: id++, rank: r, suit: s });
+  for (let i = 0; i < jokers; i++) cards.push({ id: id++, rank: 'JOKER', suit: null });
+  return cards;
+}
+function shuffle(arr, rng = Math.random) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+// Cards per hand at deal time; always leaves a draw pile of >= `reserve` cards when possible.
+// No-refill rules deal the whole deck, so pick the smallest joker count (>= 2) that divides evenly.
+function autoJokers(n) { for (let j = 2; j < 2 + n; j++) if ((52 + j) % n === 0) return j; return 2; }
+function handSizeFor(n, total, reserve = 6) {
+  return Math.max(1, Math.min(10, Math.floor((total - reserve) / n) - 6));
+}
+const cardsLeft = p => p.hand.length + p.faceUp.length + p.faceDown.length;
+const log = (s, t) => { s.log.push(t); if (s.log.length > 300) s.log.shift(); };
+const rl = (r, n) => (LABEL[r] || r) + (n > 1 ? 's' : '');
+const describe = (n, r) => n === 1 ? `${r === 'A' || r === '8' ? 'an' : 'a'} ${LABEL[r] || r}` : `${NUMW[n] || n} ${rl(r, n)}`;
+
+/* ---------- setup ---------- */
+function newGame(o = {}) {
+  const n = o.players || 4;
+  if (n < 2 || n > 6) throw new Error('2-6 players');
+  const rng = o.rng || Math.random;
+  const refill = !!o.refill;      // optional legacy rule: refill hand to 3 from a draw pile (off by default)
+  const deck = shuffle(createDeck(o.jokers ?? (refill ? 2 : autoJokers(n))), rng);
+  const total = deck.length;
+  { const perm = shuffle([...Array(total).keys()], rng); deck.forEach((c, i) => { c.id = perm[i]; }); }   // ids carry no information about the card (needed for online play)
+  const handSize = refill ? handSizeFor(n, total) : Math.max(1, Math.floor(total / n) - 6);
+  const st = { rng, total, handSize, refill, players: [], drawPile: deck, pile: [], burned: [], current: 0, direction: 1,
+    effRank: null, restriction: null, finishOrder: [], log: [], phase: 'setup', opening: false, openZone: null,
+    passCount: 0, turns: 0, seen: {}, loser: null, adjudicated: null, events: [] };
+  for (let i = 0; i < n; i++) st.players.push({
+    index: i, name: (o.names && o.names[i]) || `Player ${i + 1}`,
+    controller: (o.controllers && o.controllers[i]) || (i === 0 ? 'human' : 'ai'),
+    personality: (o.personalities && o.personalities[i]) || null,
+    hand: [], faceUp: [], faceDown: [], finished: false, place: null, ready: false });
+  for (const p of st.players) for (let k = 0; k < 3; k++) p.faceDown.push(deck.pop());   // dealt blind
+  for (const p of st.players) for (let k = 0; k < 3 + handSize; k++) p.hand.push(deck.pop()); // pool to pick face-ups from
+  if (!refill && deck.length) st.burned.push(...deck.splice(0));   // only if an explicit joker count doesn't divide evenly
+  log(st, refill ? `New game: ${n} players, ${deck.length} cards in the draw pile.` : `New game: ${n} players, ${total} cards dealt to everyone.`);
+  return st;
+}
+function chooseFaceUp(st, pi, ids) {
+  if (st.phase !== 'setup') return err('Not in setup');
+  const p = st.players[pi];
+  if (!p || p.ready) return err('Already chosen');
+  if (!Array.isArray(ids) || ids.length !== 3 || new Set(ids).size !== 3) return err('Pick exactly 3 cards');
+  const picked = ids.map(id => p.hand.find(c => c.id === id));
+  if (picked.some(c => !c)) return err('Card not in your hand');
+  p.hand = p.hand.filter(c => !picked.includes(c));
+  p.faceUp = picked; p.ready = true;
+  if (st.players.every(q => q.ready)) beginPlay(st);
+  return { ok: true };
+}
+const isOpenCard = c => c.rank === '4' && c.suit === 'C';
+function beginPlay(st) {
+  st.phase = 'play';
+  for (const zone of ['hand', 'faceUp']) for (const p of st.players) if (p[zone].some(isOpenCard)) {
+    st.current = p.index; st.opening = true; st.openZone = zone;
+    log(st, `${p.name} holds the 4 of clubs and opens the game.`);
+    return;
+  }
+  st.current = Math.floor(st.rng() * st.players.length);
+  log(st, `The 4 of clubs is hidden. ${st.players[st.current].name} starts.`);
+}
+
+/* ---------- rules ---------- */
+function rankAllowed(st, r) {
+  if (st.restriction === 'low') return LOW.has(r) || r === '10' || r === '2' || r === '3'; // 7: default ranking (2..7 are <= 7); 10 and 3 playable on anything
+  if (st.restriction === 'face' && FACE.has(r)) return false;        // 5: no J/Q/K
+  if (st.effRank === null || WILD.has(r)) return true;
+  return STR[r] >= STR[st.effRank];
+}
+function whyBlocked(st, r) {
+  if (st.restriction === 'low') return 'A 7 is in force: play lower than 7 (7 is ok) or a 10.';
+  if (st.restriction === 'face' && FACE.has(r)) return 'A 5 is in force: no Jacks, Queens or Kings.';
+  if (r === '5' && FACE.has(st.effRank)) return 'A 5 cannot be played on a Jack, Queen or King.';
+  return `Must play ${LABEL[st.effRank] || st.effRank} or higher (or a 2, 3, 10 or Ace).`;
+}
+function legalRanks(st) { return PLAIN.filter(r => rankAllowed(st, r)); }
+function zoneOf(st, p) {
+  if (st.opening && st.current === p.index) return st.openZone;
+  if (p.hand.length) return 'hand';
+  if (p.faceUp.length) return 'faceUp';
+  if (p.faceDown.length) return 'faceDown';
+  return null;
+}
+function validateMove(st, pi, ids, asRank) {
+  const fail = (reason, extra) => Object.assign({ ok: false, reason }, extra);
+  const p = st.players[pi];
+  if (st.phase !== 'play') return fail('The game is not in play.');
+  if (!p || p.finished || st.current !== pi) return fail('Not your turn.');
+  if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) return fail('Select at least one card.');
+  const zone = zoneOf(st, p);
+  if (!zone) return fail('No cards to play.');
+  if (zone === 'faceDown' && ids.length !== 1) return fail('Face-down cards are played one at a time.');
+  const cards = ids.map(id => p[zone].find(c => c.id === id));
+  if (cards.some(c => !c)) return fail('Those cards are not currently playable.');
+  const real = cards.filter(c => c.rank !== 'JOKER'), jokers = cards.length - real.length;
+  let rank;
+  if (real.length) {
+    rank = real[0].rank;
+    if (real.some(c => c.rank !== rank)) return fail('Only cards of the same rank can be played together.');
+    if (jokers && asRank && asRank !== rank) return fail('A Joker played with other cards must match their rank.');
+  } else {
+    rank = asRank || '10';
+    if (!PLAIN.includes(rank)) return fail('Invalid Joker identity.');
+  }
+  if (st.opening && !cards.some(isOpenCard)) return fail('The opening play must include the 4 of clubs.');
+  if (!rankAllowed(st, rank)) return fail(whyBlocked(st, rank));
+  const total = cardsLeft(p);
+  if (cards.length === total && cards.some(c => NO_FINISH.has(c.rank)))
+    return fail('You cannot finish with a 6, a 9 or a Joker.', { forcedPickup: true });
+  return { ok: true, cards, rank, zone };
+}
+function getLegalMoves(st, pi) {
+  const p = st.players[pi];
+  if (st.phase !== 'play' || !p || p.finished || st.current !== pi) return [];
+  const zone = zoneOf(st, p);
+  if (!zone || zone === 'faceDown') return [];
+  const cards = p[zone], jokers = cards.filter(c => c.rank === 'JOKER'), by = {};
+  cards.filter(c => c.rank !== 'JOKER').forEach(c => (by[c.rank] = by[c.rank] || []).push(c));
+  const moves = [];
+  const consider = (sel, as) => {
+    const v = validateMove(st, pi, sel.map(c => c.id), as);
+    if (v.ok) moves.push({ ids: sel.map(c => c.id), asRank: v.rank, rank: v.rank, count: sel.length, jokers: sel.filter(c => c.rank === 'JOKER').length });
+  };
+  for (const r of Object.keys(by)) {
+    const g = by[r].slice().sort((a, b) => isOpenCard(b) - isOpenCard(a));
+    for (let k = 1; k <= g.length; k++) for (let m = 0; m <= jokers.length; m++) consider(g.slice(0, k).concat(jokers.slice(0, m)), r);
+  }
+  for (const r of PLAIN) for (let m = 1; m <= jokers.length; m++) consider(jokers.slice(0, m), r);
+  return moves;
+}
+function fourOfKind(st) {   // 3s are transparent for other ranks, but four 3s in a row burn
+  let n3 = 0;
+  for (let i = st.pile.length - 1; i >= 0 && st.pile[i].as === '3'; i--) n3++;
+  if (n3 >= 4) return '3';
+  let r = null, n = 0;
+  for (let i = st.pile.length - 1; i >= 0; i--) {
+    const a = st.pile[i].as;
+    if (a === '3') continue;
+    if (r === null) { r = a; n = 1; } else if (a === r) n++; else break;
+  }
+  return n >= 4 ? r : null;
+}
+function wouldBurn(st, m) {   // would playing move `m` (from getLegalMoves) burn the pile?
+  if (m.rank === '10') return true;
+  let c = 0;
+  for (let i = st.pile.length - 1; i >= 0; i--) {
+    const a = st.pile[i].as;
+    if (m.rank === '3') { if (a === '3') c++; else break; }
+    else { if (a === '3') continue; if (a === m.rank) c++; else break; }
+  }
+  return c + m.count >= 4;
+}
+function nextEligible(st, from, dir) {
+  const n = st.players.length;
+  for (let i = 1; i < n; i++) { const idx = ((from + dir * i) % n + n) % n; if (!st.players[idx].finished) return idx; }
+  return null;
+}
+function stepAhead(st, from, skips) {
+  let cur = from;
+  for (let k = 0; k <= skips; k++) {
+    const nx = nextEligible(st, cur, st.direction);
+    if (nx === null) return null;
+    if (k < skips) log(st, `${st.players[nx].name} was skipped.`);
+    cur = nx;
+  }
+  return cur;
+}
+function refill(st, p) { const d = []; while (p.hand.length < 3 && st.drawPile.length) { const c = st.drawPile.pop(); p.hand.push(c); d.push(c.id); } return d; }
+function burnPile(st, why, p) {
+  const n = st.pile.length;
+  st.burned.push(...st.pile); st.pile = [];
+  st.effRank = null; st.restriction = null;
+  st.events.push({ type: 'burn', player: p.index, count: n, why });
+  log(st, `The pile (${n} cards) was burned by ${why}.`);
+}
+function checkFinished(st, p) {
+  if (!p.finished && cardsLeft(p) === 0) {
+    p.finished = true; st.finishOrder.push(p.index); p.place = st.finishOrder.length;
+    st.events.push({ type: 'finish', player: p.index });
+    log(st, `${p.name} has finished (place ${p.place}).`);
+  }
+}
+function endGame(st) {
+  const left = st.players.filter(p => !p.finished);
+  st.phase = 'over';
+  if (left.length === 1) { const l = left[0]; st.loser = l.index; l.place = st.players.length; st.finishOrder.push(l.index); log(st, `${l.name} is the last player with cards and loses.`); }
+}
+function signature(st) {   // position fingerprint, used to detect endless cycles
+  const z = p => [p.hand, p.faceUp, p.faceDown].map(a => a.map(c => c.rank).sort().join('')).join('|');
+  return [st.current, st.direction, st.effRank, st.restriction, st.drawPile.length, st.pile.map(c => c.as).join(''),
+    st.players.map(p => p.finished ? 'x' : z(p)).join('/')].join('#');
+}
+function adjudicate(st, why) {
+  const left = st.players.filter(p => !p.finished).sort((a, b) => cardsLeft(a) - cardsLeft(b));
+  left.slice(0, -1).forEach(p => { p.finished = true; st.finishOrder.push(p.index); p.place = st.finishOrder.length; });
+  st.adjudicated = why; log(st, `Game stalled (${why}); fewest cards wins.`);
+  endGame(st);
+}
+function applyPlay(st, p, v, opts) {
+  const { cards, rank, zone } = v;
+  const wasOpening = st.opening;
+  p[zone] = p[zone].filter(c => !cards.includes(c));
+  cards.forEach(c => { c.as = rank; st.pile.push(c); });
+  const jk = cards.some(c => c.rank === 'JOKER');
+  st.events.push({ type: 'play', player: p.index, cards: cards.map(c => c.id), rank, zone });
+  log(st, `${p.name} played ${describe(cards.length, rank)}${jk ? ' (using a Joker)' : ''}${zone === 'faceUp' ? ' from their face-up cards' : zone === 'faceDown' ? ' from a face-down card' : ''}.`);
+  st.passCount = 0;
+  if (rank === '3') { /* invisible: rank and restriction unchanged */ }
+  else if (rank === '2') { st.effRank = null; st.restriction = null; }
+  else { st.effRank = rank; st.restriction = rank === '5' ? 'face' : rank === '7' ? 'low' : null; }
+  if (wasOpening) {
+    st.opening = false; st.openZone = null;
+    st.direction = opts.direction === 'ccw' ? -1 : 1;
+    log(st, `${p.name} chose ${st.direction === 1 ? 'clockwise' : 'anticlockwise'} play.`);
+  } else if (rank === '4' && st.players.length > 2) {
+    st.direction *= -1; st.events.push({ type: 'reverse' }); log(st, `${p.name} reversed the direction.`);   // any number of 4s = one reversal
+  }
+  const skips = rank === '8' ? 1 : 0;   // any number of 8s skips exactly one player
+  if (zone === 'hand' && st.refill) { const d = refill(st, p); if (d.length) st.events.push({ type: 'draw', player: p.index, cards: d, count: d.length }); }
+  let burn = null;
+  if (rank === '10') burn = 'a 10';
+  else { const f = fourOfKind(st); if (f) burn = `four matching ${rl(f, 2)}`; }
+  checkFinished(st, p);
+  if (burn) burnPile(st, burn, p);
+  if (st.players.filter(q => !q.finished).length <= 1) { endGame(st); return; }
+  let next;
+  if (burn && !p.finished) { next = p.index; log(st, `${p.name} takes another turn.`); }
+  else if (rank === 'A') {
+    let t = opts.target;
+    if (!(Number.isInteger(t) && t !== p.index && st.players[t] && !st.players[t].finished)) t = nextEligible(st, p.index, st.direction);
+    next = t; log(st, `${p.name} played an Ace and selected ${st.players[t].name}.`);
+  } else next = stepAhead(st, p.index, burn ? 0 : skips);
+  st.current = next;
+}
+function doPickup(st, p, note) {
+  const n = st.pile.length;
+  st.pile.forEach(c => delete c.as);
+  p.hand.push(...st.pile); st.pile = [];
+  st.effRank = null; st.restriction = null;
+  st.events.push({ type: 'pickup', player: p.index, count: n });
+  if (n) { st.passCount = 0; log(st, `${p.name} ${note ? note + ' and ' : ''}picked up ${n} card${n > 1 ? 's' : ''}.`); }
+  else { st.passCount++; log(st, `${p.name} ${note || 'had no playable card'} and passed.`); }
+  st.current = stepAhead(st, p.index, 0);
+}
+const err = reason => ({ ok: false, error: reason });
+
+/* ---------- public entry point: every human/AI action goes through here ---------- */
+function act(st, pi, action, opts = {}) {
+  st.events = [];
+  if (st.phase === 'setup') return action.type === 'faceUp' ? chooseFaceUp(st, pi, action.ids) : err('Choose your face-up cards first.');
+  if (st.phase !== 'play') return err('The game is over.');
+  const p = st.players[pi];
+  if (!p || p.finished || st.current !== pi) return err('Not your turn.');
+  if (action.type === 'play') {
+    const v = validateMove(st, pi, action.ids, action.asRank);
+    if (!v.ok) {
+      if (!v.forcedPickup) return err(v.reason);
+      doPickup(st, p, 'tried to finish with a 6, 9 or Joker');
+    } else applyPlay(st, p, v, action);
+  } else if (action.type === 'pickup') {
+    const zone = zoneOf(st, p);
+    if (zone === 'faceDown') return err('Choose a face-down card to play.');
+    if (st.opening) return err('You must open with the 4 of clubs.');
+    if (getLegalMoves(st, pi).length) return err('You have a playable card.');
+    doPickup(st, p, st.pile.length ? 'had no legal move' : null);
+  } else if (action.type === 'flip') {
+    if (zoneOf(st, p) !== 'faceDown') return err('Face-down cards are not in play yet.');
+    const card = p.faceDown.find(c => c.id === action.id);
+    if (!card) return err('No such face-down card.');
+    st.events.push({ type: 'reveal', player: p.index, card: { ...card } });
+    let as;
+    if (card.rank === 'JOKER') {
+      const ok = legalRanks(st);
+      as = opts.chooseJoker ? opts.chooseJoker(ok.slice()) : (ok.includes('10') ? '10' : ok[0]);
+      if (!ok.includes(as)) as = ok[0];
+    }
+    const v = validateMove(st, pi, [card.id], as);
+    if (v.ok) applyPlay(st, p, v, action);
+    else {
+      log(st, `${p.name} revealed ${describe(1, card.rank)} but could not play it.`);
+      p.faceDown = p.faceDown.filter(c => c !== card);
+      card.as = card.rank; st.pile.push(card);
+      doPickup(st, p, null);
+    }
+  } else return err('Unknown action.');
+  st.turns++;
+  if (st.phase === 'play') {
+    const active = st.players.filter(q => !q.finished).length;
+    const sig = signature(st); st.seen[sig] = (st.seen[sig] || 0) + 1;
+    if (st.seen[sig] >= 4) adjudicate(st, 'repeated position');
+    else if (st.turns > MAX_TURNS) adjudicate(st, 'turn limit');
+    else if (st.passCount >= active * 2) adjudicate(st, 'nobody can move');
+  }
+  return { ok: true, events: st.events };
+}
+
+/* ---------- information barrier: what player `pi` is allowed to know ---------- */
+function publicView(st, pi) {
+  const cl = c => ({ ...c });
+  return {
+    me: pi, current: st.current, direction: st.direction, phase: st.phase, opening: st.opening,
+    effRank: st.effRank, restriction: st.restriction, handSize: st.handSize,
+    pile: st.pile.map(cl), drawCount: st.drawPile.length, burnedCount: st.burned.length,
+    finishOrder: st.finishOrder.slice(),
+    players: st.players.map(p => ({
+      index: p.index, name: p.name, finished: p.finished, place: p.place, controller: p.controller, personality: p.personality,
+      handCount: p.hand.length, faceUp: p.faceUp.map(cl), faceDownCount: p.faceDown.length,
+      hand: p.index === pi ? p.hand.map(cl) : undefined,
+      faceDownIds: p.faceDown.map(c => c.id),   // ids only (needed to click a slot); never rank/suit
+    })),
+  };
+}
+function auditCards(st) {
+  const all = [...st.drawPile, ...st.pile, ...st.burned];
+  st.players.forEach(p => all.push(...p.hand, ...p.faceUp, ...p.faceDown));
+  const ids = new Set(all.map(c => c.id));
+  if (all.length !== st.total) throw new Error(`Card count ${all.length} != ${st.total}`);
+  if (ids.size !== all.length) throw new Error('Duplicate card ids');
+  st.players.forEach(p => { if (!st.adjudicated && p.finished && cardsLeft(p)) throw new Error('Finished player holds cards'); });
+  return true;
+}
+
+const API = { RANKS, PLAIN, STR, WILD, FACE, LOW, SUITS, mulberry32, createDeck, shuffle, handSizeFor, autoJokers, newGame, chooseFaceUp, beginPlay,
+  rankAllowed, legalRanks, validateMove, getLegalMoves, act, publicView, auditCards, nextEligible, wouldBurn, cardsLeft, zoneOf, fourOfKind, isOpenCard, describe };
+if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.CardEngine = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* AI players. Decisions use only: own cards, public table information (E.publicView), and the engine's
+   own legal-move generator. Opponents' hands, anyone's face-down cards and the draw order are never read. */
+(function (root) {
+'use strict';
+const E = (typeof module !== 'undefined' && module.exports && typeof require === 'function') ? require('./engine.js') : root.CardEngine;
+const PERS = ['conservative', 'aggressive', 'tactical'];
+// How much a card is worth holding on to (specials are valuable).
+const KEEP = { '4': 1, '5': 1.5, '6': .5, '7': 3, '8': 3, '9': .5, '10': 6, J: 1.5, Q: 2, K: 3, '3': 5, '2': 6, A: 5, JOKER: 9 };
+const left = p => p.handCount + p.faceUp.length + p.faceDownCount;
+const danger = p => { const n = left(p); return n <= 2 ? 3 : n <= 4 ? 1.5 : 0; };   // how close an opponent is to finishing
+
+function nextOf(v, from, dir) {
+  const n = v.players.length;
+  for (let i = 1; i < n; i++) { const j = ((from + dir * i) % n + n) % n; if (!v.players[j].finished) return j; }
+  return null;
+}
+function run(v, rank) {   // length of the run of `rank` on top of the pile (3s are transparent, except when counting 3s)
+  let c = 0;
+  for (let i = v.pile.length - 1; i >= 0; i--) {
+    const a = v.pile[i].as;
+    if (rank === '3') { if (a === '3') c++; else break; }
+    else { if (a === '3') continue; if (a === rank) c++; else break; }
+  }
+  return c;
+}
+const burns = (v, m) => m.rank === '10' || run(v, m.rank) + m.count >= 4;
+function after(v, m) {    // pile state the next player will face after this move
+  if (burns(v, m) || m.rank === '2') return { effRank: null, restriction: null };
+  if (m.rank === '3') return { effRank: v.effRank, restriction: v.restriction };
+  return { effRank: m.rank, restriction: m.rank === '5' ? 'face' : m.rank === '7' ? 'low' : null };
+}
+// Only certain when the opponent has no hand left: their face-up cards are public.
+function cannotPlay(pseudo, p) {
+  if (p.handCount === 0 && p.faceUp.length) return !p.faceUp.some(c => c.rank === 'JOKER' || E.rankAllowed(pseudo, c.rank));
+  return false;
+}
+
+function score(v, me, m, P, diff, pool) {
+  const mp = v.players[me], cards = m.ids.map(id => pool[id]);
+  const keep = cards.reduce((s, c) => s + KEEP[c.rank], 0), r = m.rank;
+  const B = burns(v, m), aft = after(v, m), dir = v.direction;
+  const nx = nextOf(v, me, dir), np = nx === null ? null : v.players[nx], dn = np ? danger(np) : 0;
+  const stuck = !B && np ? cannotPlay(aft, np) : false;
+  const W = { conservative: [2.2, 1.4, .7], aggressive: [4, .5, .1], tactical: [3, .8, .35] }[P] || [2.2, 1.4, .7]; // [shed, keep-cost, rank-cost]
+  const urg = Math.min(1, Math.max(0, (mp.handCount - 5) / 8));            // big hand: stop hoarding specials, shed and reset
+  let s = W[0] * m.count * (1 + urg) - W[1] * keep * (1 - .8 * urg) - W[2] * E.STR[r] * (1 - .8 * urg);
+  const bad = c => c.rank === '6' || c.rank === '9' || c.rank === 'JOKER';           // these can never be the last card played
+  const nBad = cards.filter(bad).length;
+  if (nBad && left(mp) > m.count) s += nBad * (left(mp) <= 6 ? 3.5 : r === 'JOKER' ? 0 : 1.5);   // dump them while others can still follow
+  if (B) s += .4 * v.pile.length + (P === 'aggressive' ? 9 : P === 'tactical' ? (v.pile.length >= 5 ? 6 : 3) : (v.pile.length >= 5 ? 4 : 1.5));
+  if (r === '8') s += P === 'aggressive' ? 3 : P === 'tactical' ? .5 + 2.5 * dn : 0;
+  if (r === '8' && v.players.filter(p => !p.finished).length === 2) s += 2.5;       // heads-up: an 8 is an extra turn
+  if (r === '4' && v.players.length > 2) {
+    const pv = nextOf(v, me, -dir), dp = pv === null ? 0 : danger(v.players[pv]);
+    s += P === 'tactical' ? 2 * (dn - dp) : P === 'aggressive' ? 1 : -.5;
+  }
+  if (r === '7') s += P === 'aggressive' ? 3 : P === 'tactical' ? 1 + 1.5 * dn : -1;
+  if (r === '5') s += P === 'aggressive' ? 1.5 : P === 'tactical' ? .5 : 0;
+  if (r === 'A' && !B) s += P === 'aggressive' ? 3 : P === 'tactical' ? 2.5 : .5;
+  if (r === '2' && !B && P === 'tactical' && dn >= 1.5) s -= 2.5 * dn;              // don't hand a near-winner a free reset
+  if (stuck) s += P === 'tactical' ? 4 : P === 'aggressive' ? 3 : (diff === 'hard' ? 1.5 : 0);
+  if (mp.faceDownCount === 0) {                                                       // don't get stranded holding only 6/9/Joker
+    const rest = Object.values(pool).filter(c => !m.ids.includes(c.id));
+    if (rest.length && rest.every(bad)) s -= 10;
+  }
+  return s;
+}
+
+function pickTarget(v, me, P, rng = Math.random) {   // who plays after my Ace
+  const opp = v.players.filter(p => !p.finished && p.index !== me);
+  if (!opp.length) return undefined;
+  const tie = () => rng() - .5;
+  if (P === 'conservative') return opp.slice().sort((a, b) => left(b) - left(a) || tie())[0].index;   // hand the turn to the least dangerous player
+  const wild = p => p.faceUp.some(c => c.rank === 'JOKER' || E.WILD.has(c.rank));
+  const sureStuck = p => P === 'tactical' && p.handCount === 0 && p.faceUp.length > 0 && !wild(p);       // after an Ace only wilds are playable
+  return opp.slice().sort((a, b) => (sureStuck(b) - sureStuck(a)) || (left(a) - left(b)) || tie())[0].index; // target the leader
+}
+function pickDir(v, me, P, rng = Math.random) {      // only used for the opening 4♣
+  if (P === 'tactical') {
+    const a = nextOf(v, me, 1), b = nextOf(v, me, -1);
+    if (a !== null && b !== null) return left(v.players[a]) >= left(v.players[b]) ? 'cw' : 'ccw';
+  }
+  return rng() < .5 ? 'cw' : 'ccw';
+}
+function pickFaceUp(hand, P, diff, rng = Math.random) {
+  const f = {
+    conservative: c => ['2', '3', '10', 'JOKER'].includes(c.rank) ? -5 + E.STR[c.rank] * .1 : E.STR[c.rank],   // keep specials in hand
+    aggressive: c => ({ A: 10, '10': 9, K: 8, Q: 7, J: 6, '2': 5 }[c.rank] ?? E.STR[c.rank] * .4) - (c.rank === 'JOKER' ? 9 : 0),
+    tactical: c => { let x = E.STR[c.rank]; if (c.rank === '6' || c.rank === '9') x -= 4; if (c.rank === 'JOKER') x = -6; if (c.rank === '2' || c.rank === '3') x -= 3; return x; },
+  }[P] || (c => E.STR[c.rank]);
+  const noise = diff === 'easy' ? 5 : diff === 'hard' ? .1 : .6;
+  return hand.map(c => [c, f(c) + (rng() - .5) * 2 * noise]).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0].id);
+}
+
+/* Returns { action, opts } ready for E.act(st, pi, action, opts). */
+function decide(st, pi, o = {}) {
+  const rng = o.rng || Math.random, diff = o.difficulty || 'normal';
+  const v = E.publicView(st, pi), me = v.players[pi], P = me.personality || 'conservative';
+  if (st.phase === 'setup') return { action: { type: 'faceUp', ids: pickFaceUp(me.hand, P, diff, rng) } };
+  if (E.zoneOf(st, st.players[pi]) === 'faceDown')      // blind: slot ids only, never the cards
+    return { action: { type: 'flip', id: me.faceDownIds[Math.floor(rng() * me.faceDownIds.length)] }, opts: { chooseJoker: r => r.includes('10') ? '10' : r[0] } };
+  const moves = E.getLegalMoves(st, pi);
+  if (!moves.length) return { action: { type: 'pickup' } };
+  let best;
+  if (rng() < (o.explore ?? ({ easy: .3, normal: .06, hard: .04 }[diff] ?? .06))) best = moves[Math.floor(rng() * moves.length)];   // occasional off-script move also breaks cycles
+  else {
+    const noise = { easy: 6, normal: .8, hard: .2 }[diff] ?? .8, pool = {};
+    me.hand.concat(me.faceUp).forEach(c => pool[c.id] = c);
+    let bs = -1e9;
+    for (const m of moves) { const s = score(v, pi, m, P, diff, pool) + (rng() - .5) * 2 * noise; if (s > bs) { bs = s; best = m; } }
+  }
+  return { action: { type: 'play', ids: best.ids, asRank: best.asRank, direction: pickDir(v, pi, P, rng), target: pickTarget(v, pi, P, rng) } };
+}
+
+const API = { PERS, decide, pickTarget, pickFaceUp, pickDir };
+if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.AI = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+const E=CardEngine,$=id=>document.getElementById(id);
+const NAMES=['You','Ava','Ben','Cleo','Dev','Eli'],AV=['🙂','🦊','🐻','🐱','🤖','🦉'];
+const SYM={S:'♠',H:'♥',D:'♦',C:'♣'},ICON={'2':'↺','3':'👻','4':'⇄','5':'✋','7':'⬇','8':'⏭','10':'🔥','A':'👑','JOKER':'🃏'};
+const LBL={J:'Jack',Q:'Queen',K:'King',A:'Ace',JOKER:'Joker'},PL={conservative:'🛡️ Conservative',aggressive:'⚔️ Aggressive',tactical:'🎯 Tactical'};
+const JR=['2','3','4','5','6','7','8','9','10','J','Q','K','A'],jopts=()=>JR.map(r=>[r,LBL[r]||r,cfg.hints&&!E.legalRanks(st).includes(r)]);
+let st=null,sel=new Set(),sSel=new Set(),cfg={n:4,j:2,speed:700,hints:true,diff:'normal',pers:'mixed'},timer,flash=false,tt,pileView=null,busy=false;
+const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',2400)};
+const FIG={
+K:c=>`<svg viewBox="0 0 40 34"><path d="M3 34Q5 22 20 21Q35 22 37 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M14 21.5L20 30L26 21.5" fill="#fff" stroke="#222" stroke-width=".6"/><ellipse cx="20" cy="14" rx="6.5" ry="7.5" fill="#f2c9a0" stroke="#222" stroke-width=".8"/><path d="M13.6 15Q14 25 20 25.5Q26 25 26.4 15Q24 19.5 20 19.5Q16 19.5 13.6 15Z" fill="#eee" stroke="#222" stroke-width=".6"/><path d="M16 17Q20 15.5 24 17" fill="none" stroke="#999" stroke-width=".8"/><circle cx="17.3" cy="12.6" r=".8" fill="#222"/><circle cx="22.7" cy="12.6" r=".8" fill="#222"/><path d="M12 8L12.6 1.5L16.4 5.5L20 .8L23.6 5.5L27.4 1.5L28 8Z" fill="#e0b53a" stroke="#222" stroke-width=".8"/><circle cx="20" cy="4" r="1" fill="${c}"/><path d="M31 33V19" stroke="#e0b53a" stroke-width="1.6"/></svg>`,
+Q:c=>`<svg viewBox="0 0 40 34"><path d="M11 12Q8 27 12 31L28 31Q32 27 29 12Q20 3 11 12Z" fill="#8a5a22" stroke="#222" stroke-width=".8"/><path d="M5 34Q7 23 20 22Q33 23 35 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M12 25Q20 31 28 25" fill="none" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="1.2 1.2"/><ellipse cx="20" cy="14.5" rx="5.8" ry="7" fill="#f6d2ac" stroke="#222" stroke-width=".8"/><path d="M14 9Q20 5 26 9" fill="none" stroke="#8a5a22" stroke-width="2"/><circle cx="17.5" cy="13.5" r=".8" fill="#222"/><circle cx="22.5" cy="13.5" r=".8" fill="#222"/><path d="M18 18.5Q20 20 22 18.5" fill="none" stroke="#b33" stroke-width=".9"/><path d="M13 8L14 2.5L17 5.5L20 1.5L23 5.5L26 2.5L27 8Z" fill="#e0b53a" stroke="#222" stroke-width=".8"/><circle cx="20" cy="4.6" r=".9" fill="${c}"/></svg>`,
+J:c=>`<svg viewBox="0 0 40 34"><path d="M7 34Q8 23 20 22Q32 23 33 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M16 22Q20 27 24 22" fill="#e0b53a" stroke="#222" stroke-width=".6"/><path d="M13 12Q12 22 15 24L15 12Z M27 12Q28 22 25 24L25 12Z" fill="#6b4a1e"/><ellipse cx="20" cy="14.5" rx="6" ry="7" fill="#f6d2ac" stroke="#222" stroke-width=".8"/><circle cx="17.5" cy="14" r=".8" fill="#222"/><circle cx="22.5" cy="14" r=".8" fill="#222"/><path d="M18 18.5Q20 19.8 22 18.5" fill="none" stroke="#b33" stroke-width=".9"/><path d="M11 10Q12 1 22 2Q30 3 29 10Q20 6 11 10Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M24 3Q34 -1 36 8Q33 3 27 5Z" fill="#e0b53a" stroke="#222" stroke-width=".5"/></svg>`};
+function face(c,z=''){const r=c.rank,jk=r==='JOKER',red=c.suit==='H'||c.suit==='D',l=jk?'JK':r,s=jk?'★':SYM[c.suit];
+ return `<div class="card ${red?'red':''} ${ICON[r]?'sp':''} ${jk?'jk':''} ${c.bad?'bad':''} ${c.burning?'burning':''}" data-id="${c.id}" data-zone="${z}"><span class="c tl">${l}<br>${s}</span>${FIG[r]?`<div class="fig"><div>${FIG[r](red?'#c0192b':'#1a1a1a')}</div><div class="fl">${FIG[r](red?'#c0192b':'#1a1a1a')}</div></div>`:`<div class="mid">${ICON[r]?`<span class="ic">${ICON[r]}</span>`:''}<span class="big">${l}</span></div>`}<span class="c br">${l}<br>${s}</span>${c.as&&jk?`<i class="as">as ${c.as}</i>`:''}</div>`}
+const back=(id)=>`<div class="card back" ${id!==undefined?`data-id="${id}" data-zone="faceDown"`:''}></div>`;
+function ask(title,opts){return new Promise(res=>{const m=$('modal');m.innerHTML=`<div class="modal"><div class="box"><h3>${title}</h3><div class="opts">${opts.map(([v,l,d],i)=>`<button data-i="${i}" ${d?'disabled':''}>${l}</button>`).join('')}</div></div></div>`;m.onclick=e=>{const b=e.target.closest('button');if(!b)return;m.innerHTML='';res(opts[+b.dataset.i][0])}})}
+function rules(){$('modal').innerHTML=`<div class="modal"><div class="box"><h3>How to play</h3><p>Be the first to get rid of all your cards – the last player holding cards loses. Play hand cards, then your 3 face-up cards, then your 3 face-down cards (blind). Play one card or several of the same rank. Can’t play? Pick up the pile. The whole deck is dealt out – there is no draw pile. Burned cards are out of the game for good.</p>
+<p><b>Ranking (low → high):</b> 4 5 6 7 8 9 10 J Q K 3 2 A Joker. Play equal or higher than the pile.</p><ul>
+<li><b>2</b> ↺ resets – playable on anything, and anything on a 2.</li><li><b>3</b> 👻 invisible – playable on anything; the pile keeps its previous rank and restrictions. Four 3s in a row burn.</li>
+<li><b>4</b> ⇄ reverses direction (no effect with 2 players). Several 4s together still reverse only once. The 4♣ opens; its player picks the direction.</li><li><b>5</b> ✋ can’t go on J/Q/K, and the next player can’t play J/Q/K.</li>
+<li><b>7</b> ⬇ next player must play a card lower than 7 (7 itself is fine: 2, 3, 4, 5, 6, 7) or a 10 – or a Joker as one of those. A 3 is invisible, so the 7 still applies after it.</li><li><b>8</b> ⏭ skips the next player. Playing several 8s still skips only one player (with 2 players you simply play again).</li>
+<li><b>10</b> 🔥 playable on anything; burns the pile and you go again.</li><li><b>Ace</b> 👑 playable on anything; you choose who plays next.</li>
+<li>Playing several cards of the same rank has the same effect as playing one (one reverse, one skip, one burn).</li><li><b>Joker</b> 🃏 can be ANY card (2, 3, 4 … Ace). You declare it and it acts exactly like that card, provided that card would be legal to play.</li><li><b>Four of a kind</b> in a row on the pile burns it (3s don’t break a run); you go again.</li>
+<li>You can’t finish on a <b>6, 9 or Joker</b> – you must pick up the pile instead.</li><li>Face-down card illegal? It joins the pile you pick up.</li></ul>
+<button onclick="$('modal').innerHTML=''">Close</button></div></div>`}
+function render(){const a=$('app');
+ if(!st){a.innerHTML=`<div class="menu"><h1>🔥 Burn Pile</h1><p>A card-shedding game. You vs the computer.</p><b>Players</b><div class="opts">${[2,3,4,5,6].map(n=>`<button class="alt ${cfg.n===n?'on':''}" onclick="cfg.n=${n};render()">${n}</button>`).join('')}</div>
+  <b>AI speed</b><div class="opts">${[['Fast',300],['Normal',700],['Slow',1200]].map(([l,v])=>`<button class="alt ${cfg.speed===v?'on':''}" onclick="cfg.speed=${v};render()">${l}</button>`).join('')}</div>
+ <b>AI difficulty</b><div class="opts">${[['easy','Easy'],['normal','Normal'],['hard','Hard']].map(([v,l])=>`<button class="alt ${cfg.diff===v?'on':''}" onclick="cfg.diff='${v}';render()">${l}</button>`).join('')}</div>
+ <b>AI personalities</b><div class="opts">${[['mixed','Mixed'],['conservative','Conservative'],['aggressive','Aggressive'],['tactical','Tactical']].map(([v,l])=>`<button class="alt ${cfg.pers===v?'on':''}" onclick="cfg.pers='${v}';render()">${l}</button>`).join('')}</div>
+ <b>Hints (move highlights &amp; helper text)</b><div class="opts">${[[true,'On'],[false,'Off']].map(([v,l])=>`<button class="alt ${cfg.hints===v?'on':''}" onclick="cfg.hints=${v};render()">${l}</button>`).join('')}</div>
+ <div class="opts"><button onclick="start()">Play</button><button class="alt" onclick="rules()">Rules</button></div></div>`;return}
+ const me=st.players[0];
+ if(st.phase==='setup'){a.innerHTML=`<div class="menu" style="max-width:760px"><h2>Choose your 3 face-up cards</h2><p>Opponents can see these. Your 3 face-down cards are already dealt and stay hidden. The rest is your hand.</p>
+ <div class="hand">${me.hand.slice().sort((x,y)=>E.STR[x.rank]-E.STR[y.rank]).map(c=>face(c,'setup').replace('class="card','class="card pick'+(sSel.has(c.id)?' sel':'')+' ')).join('')}</div>
+ <div class="ctrl"><button ${sSel.size===3?'':'disabled'} onclick="confirmSetup()">Confirm (${sSel.size}/3)</button></div></div>`;return}
+ const mine=st.current===0&&st.phase==='play',zone=E.zoneOf(st,me),moves=mine?E.getLegalMoves(st,0):[],legal=new Set(moves.flatMap(m=>m.ids)),cur=st.players[st.current];
+ const opp=p=>`<div class="opp ${st.current===p.index&&st.phase==='play'?'turn':''} ${p.finished?'done':''}"><b>${AV[p.index]} ${p.name}</b><br><small>${PL[p.personality]||''}</small><br><small>${p.finished?'finished #'+p.place:E.cardsLeft(p)+' cards'}</small>
+ <div class="row">${p.faceUp.map(c=>face(c,'')).join('')}</div><div class="row" data-of="${p.index}">${p.faceDown.map(()=>back()).join('')}</div><div class="row" data-oh="${p.index}">${p.hand.length?back()+'<small>×'+p.hand.length+'</small>':''}</div></div>`;
+ const H=cfg.hints,chips=[st.direction===1?'↻ Clockwise':'↺ Anticlockwise',!H?'':st.effRank?`Pile: ${LBL[st.effRank]||st.effRank} or higher`:'Pile: anything',
+  H&&st.restriction==='face'?'<span class="chip warn">✋ No J / Q / K</span>':'',H&&st.restriction==='low'?'<span class="chip warn">⬇ Play lower than 7 (7 is ok), or a 10</span>':'',H&&st.opening?'<span class="chip warn">Opening: play the 4♣</span>':''];
+ a.innerHTML=`<div class="top"><b>🔥 Burn Pile</b><span><button class="alt" onclick="cfg.hints=!cfg.hints;render()">Hints: ${cfg.hints?'On':'Off'}</button> <button class="alt" onclick="rules()">Rules</button> <button class="alt" onclick="st=null;render()">New game</button></span></div>
+ <div class="opps">${st.players.slice(1).map(opp).join('')}</div>
+ <div class="midrow ${flash?'flash':''}">${st.refill?`<div class="stack"><div class="deck">${st.drawPile.length?back()+(st.drawPile.length>1?back():'')+(st.drawPile.length>2?back():''):'<div class="slot"></div>'}</div><small>Draw pile: ${st.drawPile.length}</small></div>`:''}
+ <div class="pilebox"><div class="pile">${(pileView||st.pile).slice(-5).map(c=>face(c)).join('')||'<span class="slot">∅</span>'}</div><small>Pile ${(pileView||st.pile).length}</small></div>
+ <div class="stack burnpile">${st.burned.length?`<div class="deck">${back()}${st.burned.length>3?back():''}${st.burned.length>10?back():''}</div>`:'<div class="slot">🔥</div>'}<small>Burn pile: ${st.burned.length}</small></div></div>
+ <div class="chips">${chips.filter(Boolean).map(c=>c.startsWith('<')?c:`<span class="chip">${c}</span>`).join('')}</div>
+ <div class="status">${st.phase==='over'?'Game over':mine?(H&&zone==='faceDown'?'Your turn – pick a face-down card (blind)':'Your turn'):me.finished?`You finished! ${cur.name} is playing…`:`${cur.name} is thinking…`}</div>
+ <div class="dock"><div class="me ${mine?'turn':''}"><div class="row">${me.faceUp.map(c=>face(c,'faceUp').replace('class="card','class="card '+(mine&&zone==='faceUp'?(H?legal.has(c.id)?'ok hl':'no':'ok'):'')+(sel.has(c.id)?' sel':'')+' ')).join('')}</div>
+ <div class="row">${me.faceDown.map(c=>back(c.id).replace('class="card','class="card '+(mine&&zone==='faceDown'?'pick':'')+' ')).join('')}</div>
+ <div class="hand">${me.hand.slice().sort((x,y)=>E.STR[x.rank]-E.STR[y.rank]).map(c=>face(c,'hand').replace('class="card','class="card '+(mine&&zone==='hand'?(H?legal.has(c.id)?'ok hl':'no':'ok'):'')+(sel.has(c.id)?' sel':'')+' ')).join('')}</div></div>
+ <div class="ctrl"><button ${mine&&sel.size?'':'disabled'} onclick="playSel()">Play selected</button><button class="alt" ${sel.size?'':'disabled'} onclick="sel.clear();render()">Clear</button>
+ <button class="alt" ${mine&&zone!=='faceDown'&&!st.opening&&!moves.length?'':'disabled'} onclick="doAct(0,{type:'pickup'})">Pick up pile</button></div>
+</div>
+ <div class="log" id="log">${st.log.slice(-40).map(l=>`<div>${l}</div>`).join('')}</div>
+ ${st.phase==='over'&&!pileView?over():''}`;flash=false;const lg=$('log');if(lg)lg.scrollTop=1e9}
+function over(){return `<div class="modal"><div class="box"><h3>${st.loser===0?'You lost 💀':st.players[0].place===1?'You won! 🏆':'You finished #'+st.players[0].place}</h3><ol>${st.finishOrder.map(i=>`<li>${AV[i]} ${st.players[i].name}${i===st.loser?' – last with cards (loser)':''}</li>`).join('')}</ol>${st.adjudicated?'<p><small>The game stalled and was scored on cards remaining.</small></p>':''}<div class="opts"><button onclick="start()">Play again</button><button class="alt" onclick="st=null;render()">Menu</button></div></div></div>`}
+function start(){$('modal').innerHTML='';clearTimeout(timer);busy=false;pileView=null;st=E.newGame({players:cfg.n,names:NAMES.slice(0,cfg.n),controllers:NAMES.slice(0,cfg.n).map((_,i)=>i?'ai':'human'),personalities:NAMES.slice(0,cfg.n).map((_,i)=>i?(cfg.pers==='mixed'?AI.PERS[(i-1)%3]:cfg.pers):null)});sSel=new Set();sel=new Set();render()}
+function confirmSetup(){if(sSel.size!==3)return;E.act(st,0,{type:'faceUp',ids:[...sSel]});
+ st.players.slice(1).forEach(p=>E.act(st,p.index,AI.decide(st,p.index,{difficulty:cfg.diff}).action));render();tick()}
+function snap(){const r={};document.querySelectorAll('.card[data-id]').forEach(el=>r[el.dataset.id]=el.getBoundingClientRect());document.querySelectorAll('[data-of]').forEach(el=>r['of'+el.dataset.of]=el.getBoundingClientRect());document.querySelectorAll('[data-oh]').forEach(el=>r['oh'+el.dataset.oh]=el.getBoundingClientRect());return r}
+function fly(x,R){const el=document.querySelector(`.pile .card[data-id="${x.id}"]`);if(!el)return;
+ const s=R[x.id]||(x.z==='faceDown'?R['of'+x.p]:R['oh'+x.p])||R['oh'+x.p]||{left:innerWidth/2,top:innerHeight,width:60,height:84},d=el.getBoundingClientRect(),
+ dx=s.left+s.width/2-d.left-d.width/2,dy=s.top+s.height/2-d.top-d.height/2,k=Math.min(1,Math.max(.35,s.width/d.width)),T=(sc,rot)=>`translate(${dx}px,${dy}px) scale(${sc}) rotateY(${rot}deg)`;el.style.zIndex=20;
+ el.animate(x.z==='faceDown'?[{transform:T(1.25,90),offset:0},{transform:T(1.25,0),offset:.3},{transform:T(1.25,0),offset:.55},{transform:'none'}]:[{transform:T(k,0)},{transform:'none'}],
+  {duration:x.z==='faceDown'?1300:520,delay:x.i*110,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})}
+function flyBurn(){const T=document.querySelector('.burnpile .deck,.burnpile .slot');if(!T)return;const t=T.getBoundingClientRect();
+ document.querySelectorAll('.pile .card').forEach((el,i)=>{const d=el.getBoundingClientRect(),dx=t.left+t.width/2-d.left-d.width/2,dy=t.top+t.height/2-d.top-d.height/2;el.style.zIndex=20;el.classList.add('burning');
+  el.animate([{transform:'none',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.6) rotate(${i*18}deg)`,opacity:.3}],{duration:600,delay:i*50,easing:'ease-in',fill:'forwards'})})}
+function flyBack(p){const T=p===0?document.querySelector('.me .hand'):document.querySelector(`[data-oh="${p}"]`);if(!T)return;const t=T.getBoundingClientRect();
+ document.querySelectorAll('.pile .card').forEach((el,i)=>{el.classList.add('bad');const d=el.getBoundingClientRect(),dx=t.left+t.width/2-d.left-d.width/2,dy=t.top+t.height/2-d.top-d.height/2;el.style.zIndex=20;
+  el.animate([{transform:'none',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.55)`,opacity:.25}],{duration:550,delay:i*45,easing:'ease-in',fill:'forwards'})})}
+function doAct(pi,a,o){if(busy)return false;const prev=st.pile.slice(),R=snap(),r=E.act(st,pi,a,o);if(!r.ok){toast(cfg.hints?r.error:'That move isn’t allowed.');return false}sel.clear();
+ const ev=r.events||[],burn=ev.find(e=>e.type==='burn'),rv=ev.find(e=>e.type==='reveal'),pk=ev.find(e=>e.type==='pickup'),items=[];let hold=null;
+ ev.forEach(e=>{if(e.type==='play')e.cards.forEach((id,i)=>items.push({id,p:e.player,z:e.zone,i}))});
+ if(burn){hold=prev.concat(items.map(x=>st.burned.find(c=>c.id===x.id)).filter(Boolean)).map(c=>({...c,burning:true}));toast('🔥 Pile burned!')}
+ else if(rv&&pk){const c=st.players[rv.player].hand.find(c=>c.id===rv.card.id);if(c){hold=prev.concat([{...c,as:c.rank,bad:true}]);items.push({id:c.id,p:rv.player,z:'faceDown',i:0})}}
+ const fb=!!(pk&&pk.count>0);if(fb&&!hold)hold=prev.slice();
+ if(rv)toast(`${st.players[rv.player].name} revealed ${LBL[rv.card.rank]||rv.card.rank}${rv.card.rank==='JOKER'?'':' '+(SYM[rv.card.suit]||'')}`);
+ pileView=hold;render();items.forEach(x=>fly(x,R));
+ if(!items.length&&!hold){tick();return true}
+ const animT=items.length?(items.some(x=>x.z==='faceDown')?1300:520+110*items.length):0,stay=hold?(burn?450:rv?650:300):100;
+ busy=true;if(fb)setTimeout(()=>flyBack(pk.player),animT+stay);if(burn)setTimeout(flyBurn,animT+stay);
+ setTimeout(()=>{busy=false;if(hold){pileView=null;flash=!!burn;render()}tick()},animT+stay+(fb?850:0)+(burn?750:0));return true}
+function tick(){clearTimeout(timer);if(st&&st.phase==='play'&&st.players[st.current].controller==='ai')timer=setTimeout(aiMove,cfg.speed)}
+function aiMove(){const pi=st.current,p=st.players[pi];if(st.phase!=='play'||p.controller!=='ai')return;
+ const d=AI.decide(st,pi,{difficulty:cfg.diff});if(!doAct(pi,d.action,d.opts))doAct(pi,{type:'pickup'})}
+async function playSel(){if(st.current!==0||busy)return;const me=st.players[0],zone=E.zoneOf(st,me),ids=[...sel],cards=ids.map(id=>me[zone].find(c=>c.id===id)).filter(Boolean);
+ const real=cards.filter(c=>c.rank!=='JOKER');let as;
+ if(!real.length){as=await ask('🃏 Joker – it can be any card. Choose its rank',jopts().concat([[null,'Cancel']]));if(!as)return}
+ const rank=real.length?real[0].rank:as,v=E.validateMove(st,0,ids,as);
+ if(!v.ok&&!v.forcedPickup){toast(cfg.hints?v.reason:'That move isn’t allowed.');return}
+ if(v.forcedPickup){if(!await ask(v.reason+' Playing it means picking up the pile.',[[1,'Pick up'],[0,'Cancel']]))return}
+ let target,direction;
+ if(v.ok){const o=st.players.filter(q=>!q.finished&&q.index!==0);
+  if(rank==='A'&&o.length>1){target=await ask('Ace – who plays next?',o.map(q=>[q.index,AV[q.index]+' '+q.name+' ('+E.cardsLeft(q)+')']));}
+  if(st.opening){direction=await ask('Choose the direction of play',[['cw','↻ Clockwise'],['ccw','↺ Anticlockwise']])}}
+ doAct(0,{type:'play',ids,asRank:as,target,direction})}
+document.addEventListener('click',e=>{const el=e.target.closest('.card[data-id]');if(!el||!st||busy)return;const id=+el.dataset.id,z=el.dataset.zone;
+ if(st.phase==='setup'&&z==='setup'){sSel.has(id)?sSel.delete(id):sSel.size<3&&sSel.add(id);render();return}
+ if(st.phase!=='play'||st.current!==0||z!==E.zoneOf(st,st.players[0]))return;
+ if(z==='faceDown'){const fc=st.players[0].faceDown.find(x=>x.id===id);if(fc&&fc.rank==='JOKER')ask('🃏 You flipped a Joker! Choose its rank',jopts()).then(r=>doAct(0,{type:'flip',id},{chooseJoker:()=>r}));else doAct(0,{type:'flip',id});return}
+ const me=st.players[0],c=me[z].find(x=>x.id===id);if(sel.has(id)){sel.delete(id)}else{
+  const other=[...sel].map(i=>me[z].find(x=>x.id===i)).find(x=>x.rank!=='JOKER');if(other&&c.rank!=='JOKER'&&other.rank!==c.rank)sel.clear();sel.add(id)}render()});
+render();
+</script></body></html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burn Pile – Online</title>
+<style>
+:root{color-scheme:dark;--w:62px;--gold:#d4af37;--navy:#0b1a3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 30%,#14543c,#082117 70%);color:#f1ead6;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:#1b1400;background:linear-gradient(#f1d673,#c9a227);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+button:disabled{opacity:.4;cursor:not-allowed}button.alt{background:#1c3a2d;color:#f1ead6;border:1px solid #3d6b57}button.on{outline:3px solid #fff}
+.card{isolation:isolate;width:var(--w);height:calc(var(--w)*1.4);border-radius:calc(var(--w)*.1);background:#fffdf6;color:#111;position:relative;flex:none;box-shadow:0 2px 6px #0009;font-family:Georgia,serif;user-select:none;transition:transform .15s,box-shadow .15s,opacity .15s}
+.card.red{color:#c0192b}.card.sp{background:linear-gradient(#fffdf6,#f1e3b8)}.card.jk{background:linear-gradient(135deg,#ffe0f0,#d9f0ff,#fff3c4)}
+.c{z-index:2;position:absolute;font-weight:700;font-size:calc(var(--w)*.22);line-height:1;text-align:center}.tl{top:5%;left:7%}.br{bottom:5%;right:7%;transform:rotate(180deg)}
+.mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big{font-size:calc(var(--w)*.5);font-weight:700}.ic{font-size:calc(var(--w)*.26)}
+.as{position:absolute;bottom:-1px;left:0;right:0;text-align:center;font-size:calc(var(--w)*.17);background:#000a;color:#fff;border-radius:0 0 6px 6px;font-style:normal}
+.back{border:2px solid var(--gold);background:radial-gradient(circle,#d4af37 0 9%,transparent 10%),repeating-linear-gradient(45deg,#0b1a3a 0 6px,#18306a 6px 7px)}
+.back::after{content:"✦";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:calc(var(--w)*.5)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;gap:8px}.top b{font-size:18px}
+.opps{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:4px 8px}
+.opp{--w:34px;background:#0006;border:2px solid transparent;border-radius:12px;padding:6px 10px;text-align:center;min-width:130px}
+.opp.turn,.me.turn{border-color:var(--gold);box-shadow:0 0 16px var(--gold)}.opp.done{opacity:.5}
+.row{display:flex;justify-content:center;gap:3px;margin-top:3px;min-height:12px;align-items:center}.opp .ic{display:none}
+.midrow{display:flex;justify-content:center;align-items:center;gap:20px;padding:14px 8px}
+.stack,.pilebox{display:flex;flex-direction:column;align-items:center;gap:4px}
+.pile{display:flex;align-items:center;justify-content:center;min-width:calc(var(--w)*2.4);height:calc(var(--w)*1.5)}.pile .card+.card{margin-left:calc(var(--w)*-.6)}
+.slot{width:var(--w);height:calc(var(--w)*1.4);border:2px dashed #3d6b57;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.deck{position:relative;width:var(--w);height:calc(var(--w)*1.4);margin:6px 0 0 6px}.deck .card{position:absolute;top:0;left:0}.deck .card:nth-child(2){top:-3px;left:-3px}.deck .card:nth-child(3){top:-6px;left:-6px}
+.flash{animation:fl .9s}@keyframes fl{0%,100%{background:transparent}30%{background:#ff7a1a55}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 8px}.chip{background:#0007;border:1px solid #3d6b57;border-radius:99px;padding:3px 10px;font-size:13px}.chip.warn{border-color:#ff8a3d;color:#ffd2ad}
+.status{text-align:center;padding:8px;font-weight:600}
+.me{border:2px solid transparent;border-radius:14px;margin:4px 8px;padding:6px}.me .row{gap:6px;margin:4px 0}
+.hand{display:flex;flex-wrap:wrap;justify-content:center;padding-top:16px}.hand{padding-bottom:calc(var(--w)*.5)}.hand .card{margin:0 calc(var(--w)*-.12) calc(var(--w)*-.5)}
+.card.ok{cursor:pointer}.card.ok:hover{transform:translateY(-8px)}.card.no{filter:brightness(.55)}.card.bad{box-shadow:0 0 0 3px #ff3b4d,0 2px 6px #0009}.dock{margin-top:4px}.me .row{--w:50px}.midrow{padding:8px!important}
+.fig{position:absolute;left:23%;right:23%;top:11%;bottom:11%;border:1px solid #b99a3a;background:#fffaf0;display:flex;flex-direction:column;border-radius:3px;overflow:hidden}.fig>div{flex:1;min-height:0}.fig svg{width:100%;height:100%;display:block}.fig .fl{transform:rotate(180deg)}
+.card.burning{box-shadow:0 0 0 2px #ff9a1a,0 0 14px 5px #ff5a00!important;animation:flick .7s infinite alternate}
+@keyframes flick{from{filter:brightness(1)}to{filter:brightness(1.18) saturate(1.3)}}
+.card.bad::before{content:"";position:absolute;inset:0;border-radius:inherit;background:#e0182dd0;mix-blend-mode:multiply;z-index:3}
+.card.hl{box-shadow:0 0 0 2px #7bd88f,0 2px 6px #0009}.card.sel{transform:translateY(-16px);box-shadow:0 0 0 3px var(--gold),0 6px 12px #000a}
+.card.pick{cursor:pointer;box-shadow:0 0 0 2px #7bd88f}.ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px}
+.log{max-height:120px;overflow:auto;font-size:13px;background:#0006;border-radius:10px;padding:6px 10px;margin:8px}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.box{background:#10261d;border:2px solid var(--gold);border-radius:14px;padding:18px;max-width:560px;max-height:85vh;overflow:auto}.box h3{margin:0 0 10px}.box li{margin:3px 0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+#toast{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:#000c;border:1px solid var(--gold);padding:8px 14px;border-radius:10px;z-index:60;display:none;max-width:90%}
+.menu{max-width:440px;margin:6vh auto;padding:20px;text-align:center}.menu h1{font-size:34px;margin:0}.menu .opts{justify-content:center;margin:8px 0 16px}
+@media(max-width:600px){:root{--w:46px}.me .row{--w:38px}.opp{--w:28px;min-width:100px}}
+
+.seats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:10px 0}
+.seat{background:#1c3a2d;color:#f1ead6;border:2px solid #3d6b57;padding:14px 8px;line-height:1.3}
+.seat.taken{opacity:.4;filter:grayscale(1);cursor:not-allowed}.seat.mine{border-color:#d4af37;box-shadow:0 0 14px #d4af37}
+.code{font-size:46px;letter-spacing:.25em;font-weight:700;color:#d4af37}
+input{font:inherit;padding:9px 12px;border-radius:8px;border:1px solid #3d6b57;background:#0b2118;color:#f1ead6;margin:6px}
+</style></head><body>
+<div id="app"></div><div id="modal"></div><div id="toast"></div>
+<script>
+const FIRE="🔥";
+const $=id=>document.getElementById(id);
+const NAMES=['You','Ava','Ben','Cleo','Dev','Eli'],AV=['🙂','🦊','🐻','🐱','🤖','🦉'];
+const SYM={S:'♠',H:'♥',D:'♦',C:'♣'},ICON={'2':'↺','3':'👻','4':'⇄','5':'✋','7':'⬇','8':'⏭','10':'🔥','A':'👑','JOKER':'🃏'};
+const LBL={J:'Jack',Q:'Queen',K:'King',A:'Ace',JOKER:'Joker'},PL={conservative:'🛡️ Conservative',aggressive:'⚔️ Aggressive',tactical:'🎯 Tactical'};
+const JR=['2','3','4','5','6','7','8','9','10','J','Q','K','A'],jopts=()=>JR.map(r=>[r,LBL[r]||r,cfg.hints&&!V.legalRanks.includes(r)]);
+let st=null,sel=new Set(),sSel=new Set(),cfg={hints:true},timer,flash=false,tt,pileView=null,busy=false;
+const toast=m=>{const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',2400)};
+const FIG={
+K:c=>`<svg viewBox="0 0 40 34"><path d="M3 34Q5 22 20 21Q35 22 37 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M14 21.5L20 30L26 21.5" fill="#fff" stroke="#222" stroke-width=".6"/><ellipse cx="20" cy="14" rx="6.5" ry="7.5" fill="#f2c9a0" stroke="#222" stroke-width=".8"/><path d="M13.6 15Q14 25 20 25.5Q26 25 26.4 15Q24 19.5 20 19.5Q16 19.5 13.6 15Z" fill="#eee" stroke="#222" stroke-width=".6"/><path d="M16 17Q20 15.5 24 17" fill="none" stroke="#999" stroke-width=".8"/><circle cx="17.3" cy="12.6" r=".8" fill="#222"/><circle cx="22.7" cy="12.6" r=".8" fill="#222"/><path d="M12 8L12.6 1.5L16.4 5.5L20 .8L23.6 5.5L27.4 1.5L28 8Z" fill="#e0b53a" stroke="#222" stroke-width=".8"/><circle cx="20" cy="4" r="1" fill="${c}"/><path d="M31 33V19" stroke="#e0b53a" stroke-width="1.6"/></svg>`,
+Q:c=>`<svg viewBox="0 0 40 34"><path d="M11 12Q8 27 12 31L28 31Q32 27 29 12Q20 3 11 12Z" fill="#8a5a22" stroke="#222" stroke-width=".8"/><path d="M5 34Q7 23 20 22Q33 23 35 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M12 25Q20 31 28 25" fill="none" stroke="#e0b53a" stroke-width="1.4" stroke-dasharray="1.2 1.2"/><ellipse cx="20" cy="14.5" rx="5.8" ry="7" fill="#f6d2ac" stroke="#222" stroke-width=".8"/><path d="M14 9Q20 5 26 9" fill="none" stroke="#8a5a22" stroke-width="2"/><circle cx="17.5" cy="13.5" r=".8" fill="#222"/><circle cx="22.5" cy="13.5" r=".8" fill="#222"/><path d="M18 18.5Q20 20 22 18.5" fill="none" stroke="#b33" stroke-width=".9"/><path d="M13 8L14 2.5L17 5.5L20 1.5L23 5.5L26 2.5L27 8Z" fill="#e0b53a" stroke="#222" stroke-width=".8"/><circle cx="20" cy="4.6" r=".9" fill="${c}"/></svg>`,
+J:c=>`<svg viewBox="0 0 40 34"><path d="M7 34Q8 23 20 22Q32 23 33 34Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M16 22Q20 27 24 22" fill="#e0b53a" stroke="#222" stroke-width=".6"/><path d="M13 12Q12 22 15 24L15 12Z M27 12Q28 22 25 24L25 12Z" fill="#6b4a1e"/><ellipse cx="20" cy="14.5" rx="6" ry="7" fill="#f6d2ac" stroke="#222" stroke-width=".8"/><circle cx="17.5" cy="14" r=".8" fill="#222"/><circle cx="22.5" cy="14" r=".8" fill="#222"/><path d="M18 18.5Q20 19.8 22 18.5" fill="none" stroke="#b33" stroke-width=".9"/><path d="M11 10Q12 1 22 2Q30 3 29 10Q20 6 11 10Z" fill="${c}" stroke="#222" stroke-width=".8"/><path d="M24 3Q34 -1 36 8Q33 3 27 5Z" fill="#e0b53a" stroke="#222" stroke-width=".5"/></svg>`};
+function face(c,z=''){const r=c.rank,jk=r==='JOKER',red=c.suit==='H'||c.suit==='D',l=jk?'JK':r,s=jk?'★':SYM[c.suit];
+ return `<div class="card ${red?'red':''} ${ICON[r]?'sp':''} ${jk?'jk':''} ${c.bad?'bad':''} ${c.burning?'burning':''}" data-id="${c.id}" data-zone="${z}"><span class="c tl">${l}<br>${s}</span>${FIG[r]?`<div class="fig"><div>${FIG[r](red?'#c0192b':'#1a1a1a')}</div><div class="fl">${FIG[r](red?'#c0192b':'#1a1a1a')}</div></div>`:`<div class="mid">${ICON[r]?`<span class="ic">${ICON[r]}</span>`:''}<span class="big">${l}</span></div>`}<span class="c br">${l}<br>${s}</span>${c.as&&jk?`<i class="as">as ${c.as}</i>`:''}</div>`}
+const back=(id)=>`<div class="card back" ${id!==undefined?`data-id="${id}" data-zone="faceDown"`:''}></div>`;
+function ask(title,opts){return new Promise(res=>{const m=$('modal');m.innerHTML=`<div class="modal"><div class="box"><h3>${title}</h3><div class="opts">${opts.map(([v,l,d],i)=>`<button data-i="${i}" ${d?'disabled':''}>${l}</button>`).join('')}</div></div></div>`;m.onclick=e=>{const b=e.target.closest('button');if(!b)return;m.innerHTML='';res(opts[+b.dataset.i][0])}})}
+function rules(){$('modal').innerHTML=`<div class="modal"><div class="box"><h3>How to play</h3><p>Be the first to get rid of all your cards – the last player holding cards loses. Play hand cards, then your 3 face-up cards, then your 3 face-down cards (blind). Play one card or several of the same rank. Can’t play? Pick up the pile. The whole deck is dealt out – there is no draw pile. Burned cards are out of the game for good.</p>
+<p><b>Ranking (low → high):</b> 4 5 6 7 8 9 10 J Q K 3 2 A Joker. Play equal or higher than the pile.</p><ul>
+<li><b>2</b> ↺ resets – playable on anything, and anything on a 2.</li><li><b>3</b> 👻 invisible – playable on anything; the pile keeps its previous rank and restrictions. Four 3s in a row burn.</li>
+<li><b>4</b> ⇄ reverses direction (no effect with 2 players). Several 4s together still reverse only once. The 4♣ opens; its player picks the direction.</li><li><b>5</b> ✋ can’t go on J/Q/K, and the next player can’t play J/Q/K.</li>
+<li><b>7</b> ⬇ next player must play a card lower than 7 (7 itself is fine: 2, 3, 4, 5, 6, 7) or a 10 – or a Joker as one of those. A 3 is invisible, so the 7 still applies after it.</li><li><b>8</b> ⏭ skips the next player. Playing several 8s still skips only one player (with 2 players you simply play again).</li>
+<li><b>10</b> 🔥 playable on anything; burns the pile and you go again.</li><li><b>Ace</b> 👑 playable on anything; you choose who plays next.</li>
+<li>Playing several cards of the same rank has the same effect as playing one (one reverse, one skip, one burn).</li><li><b>Joker</b> 🃏 can be ANY card (2, 3, 4 … Ace). You declare it and it acts exactly like that card, provided that card would be legal to play.</li><li><b>Four of a kind</b> in a row on the pile burns it (3s don’t break a run); you go again.</li>
+<li>You can’t finish on a <b>6, 9 or Joker</b> – you must pick up the pile instead.</li><li>Face-down card illegal? It joins the pile you pick up.</li></ul>
+<button onclick="$('modal').innerHTML=''">Close</button></div></div>`}
+function render(){const a=$('app');
+ if(screen==='loading'){a.innerHTML='<div class="menu"><p>Reconnecting…</p></div>';return}
+ if(screen==='home')return renderHome();
+ if(screen==='lobby')return renderLobby();
+ if(screen==='spectate')return renderSpectate();
+ if(!st)return;
+ const me=st.players[0];
+ if(st.phase==='setup'){const ready=V.ready[V.me];a.innerHTML=`<div class="menu" style="max-width:760px"><h2>Choose your 3 face-up cards</h2><p>Opponents can see these. Your 3 face-down cards are already dealt and stay hidden. The rest is your hand.</p>
+ ${ready?'':`<div class="hand">${me.hand.slice().sort((x,y)=>E.STR[x.rank]-E.STR[y.rank]).map(c=>face(c,'setup').replace('class="card','class="card pick'+(sSel.has(c.id)?' sel':'')+' ')).join('')}</div>`}
+ <div class="ctrl">${ready?'<b>Waiting for the other players…</b>':`<button ${sSel.size===3?'':'disabled'} onclick="confirmSetup()">Confirm (${sSel.size}/3)</button>`}</div>
+ <p><small>${V.players.map((p,i)=>`${AV[i]} ${p.name}: ${p.controller==='ai'||V.ready[i]?'✓ ready':'choosing…'}`).join(' &nbsp; ')}</small></p></div>`;return}
+ const mine=st.current===0&&st.phase==='play',zone=V.zone,moves=mine?V.moves:[],legal=new Set(moves.flatMap(m=>m.ids)),cur=st.players[st.current];
+ const opp=p=>`<div class="opp ${st.current===p.index&&st.phase==='play'?'turn':''} ${p.finished?'done':''}"><b>${AV[p.seat]} ${p.name}</b><br><small>${PL[p.personality]||''}</small><br><small>${p.finished?'finished #'+p.place:E.cardsLeft(p)+' cards'}</small>
+ <div class="row">${p.faceUp.map(c=>face(c,'')).join('')}</div><div class="row" data-of="${p.index}">${p.faceDown.map(()=>back()).join('')}</div><div class="row" data-oh="${p.index}">${p.hand.length?back()+'<small>×'+p.hand.length+'</small>':''}</div></div>`;
+ const H=cfg.hints,chips=[st.direction===1?'↻ Clockwise':'↺ Anticlockwise',!H?'':st.effRank?`Pile: ${LBL[st.effRank]||st.effRank} or higher`:'Pile: anything',
+  H&&st.restriction==='face'?'<span class="chip warn">✋ No J / Q / K</span>':'',H&&st.restriction==='low'?'<span class="chip warn">⬇ Play lower than 7 (7 is ok), or a 10</span>':'',H&&st.opening?'<span class="chip warn">Opening: play the 4♣</span>':''];
+ a.innerHTML=`<div class="top"><b>🔥 Burn Pile</b><span><button class="alt" onclick="cfg.hints=!cfg.hints;render()">Hints: ${cfg.hints?'On':'Off'}</button> <button class="alt" onclick="rules()">Rules</button> <button class="alt" onclick="leaveRoom()">Leave</button></span></div>
+ <div class="opps">${st.players.slice(1).map(opp).join('')}</div>
+ <div class="midrow ${flash?'flash':''}">${st.refill?`<div class="stack"><div class="deck">${st.drawPile.length?back()+(st.drawPile.length>1?back():'')+(st.drawPile.length>2?back():''):'<div class="slot"></div>'}</div><small>Draw pile: ${st.drawPile.length}</small></div>`:''}
+ <div class="pilebox"><div class="pile">${(pileView||st.pile).slice(-5).map(c=>face(c)).join('')||'<span class="slot">∅</span>'}</div><small>Pile ${(pileView||st.pile).length}</small></div>
+ <div class="stack burnpile">${st.burned.length?`<div class="deck">${back()}${st.burned.length>3?back():''}${st.burned.length>10?back():''}</div>`:'<div class="slot">🔥</div>'}<small>Burn pile: ${st.burned.length}</small></div></div>
+ <div class="chips">${chips.filter(Boolean).map(c=>c.startsWith('<')?c:`<span class="chip">${c}</span>`).join('')}</div>
+ <div class="status">${st.phase==='over'?'Game over':mine?(H&&zone==='faceDown'?'Your turn – pick a face-down card (blind)':'Your turn'):me.finished?`You finished! ${cur.name} is playing…`:`${cur.name} is thinking…`}</div>
+ <div class="dock"><div class="me ${mine?'turn':''}"><div class="row">${me.faceUp.map(c=>face(c,'faceUp').replace('class="card','class="card '+(mine&&zone==='faceUp'?(H?legal.has(c.id)?'ok hl':'no':'ok'):'')+(sel.has(c.id)?' sel':'')+' ')).join('')}</div>
+ <div class="row">${me.faceDown.map(c=>back(c.id).replace('class="card','class="card '+(mine&&zone==='faceDown'?'pick':'')+' ')).join('')}</div>
+ <div class="hand">${me.hand.slice().sort((x,y)=>E.STR[x.rank]-E.STR[y.rank]).map(c=>face(c,'hand').replace('class="card','class="card '+(mine&&zone==='hand'?(H?legal.has(c.id)?'ok hl':'no':'ok'):'')+(sel.has(c.id)?' sel':'')+' ')).join('')}</div></div>
+ <div class="ctrl"><button ${mine&&sel.size?'':'disabled'} onclick="playSel()">Play selected</button><button class="alt" ${sel.size?'':'disabled'} onclick="sel.clear();render()">Clear</button>
+ <button class="alt" ${mine&&zone!=='faceDown'&&!st.opening&&!moves.length?'':'disabled'} onclick="doAct(0,{type:'pickup'})">Pick up pile</button></div>
+</div>
+ <div class="log" id="log">${st.log.slice(-40).map(l=>`<div>${l}</div>`).join('')}</div>
+ ${st.phase==='over'&&!pileView?over():''}`;flash=false;const lg=$('log');if(lg)lg.scrollTop=1e9}
+function over(){const me=st.players[0];return `<div class="modal"><div class="box"><h3>${st.loser===0?'You lost 💀':me.place===1?'You won! 🏆':'You finished #'+me.place}</h3><ol>${st.finishOrder.map(i=>`<li>${AV[st.players[i].seat]} ${st.players[i].name}${i===st.loser?' – last with cards (loser)':''}</li>`).join('')}</ol>${st.adjudicated?'<p><small>The game stalled and was scored on cards remaining.</small></p>':''}<div class="opts">${V.host?'<button onclick="api(\'rematch\')">Rematch (back to lobby)</button>':'<span>Waiting for the host to start a rematch…</span>'}<button class="alt" onclick="leaveRoom()">Leave</button></div></div></div>`}
+
+/* ================= online layer ================= */
+const E={STR:{'4':0,'5':1,'6':2,'7':3,'8':4,'9':5,'10':6,J:7,Q:8,K:9,'3':10,'2':11,A:12,JOKER:13},cardsLeft:p=>p.hand.length+p.faceUp.length+p.faceDown.length};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S=null,screen='loading',L=null,V=null,es=null,queue=[],lastSeq=-1,firstLoad=true;
+const urlRoom=(new URLSearchParams(location.search).get('room')||'').toUpperCase().slice(0,4);
+let myName=localStorage.getItem('bp_name')||'';
+async function post(p,b){const r=await fetch('/api/'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});return r.json()}
+const api=(p,b={})=>post(p,Object.assign({room:S&&S.room,token:S&&S.token},b));
+function enter(r){S={room:r.room,token:r.token};localStorage.setItem('bp_online',JSON.stringify(S));connect()}
+function connect(){if(es)es.close();es=new EventSource(`/events?room=${S.room}&token=${S.token}`);es.addEventListener('state',e=>onState(JSON.parse(e.data)))}
+async function createRoom(){const n=$('nm').value.trim();myName=n;localStorage.setItem('bp_name',n);const r=await post('create',{name:n});r.ok?enter(r):toast(r.error)}
+async function joinRoom(){const n=$('nm').value.trim();myName=n;localStorage.setItem('bp_name',n);const r=await post('join',{room:$('cd').value.toUpperCase().trim(),name:n});r.ok?enter(r):toast(r.error)}
+async function leaveRoom(){if(S){try{await api('leave')}catch(e){}}if(es)es.close();localStorage.removeItem('bp_online');S=null;screen='home';st=null;V=null;L=null;queue.length=0;busy=false;pileView=null;$('modal').innerHTML='';render()}
+const takeSeat=i=>api('seat',{seat:L.seats[i].mine?null:i}).then(r=>{if(!r.ok)toast(r.error)});
+const cfgSet=o=>api('config',o).then(r=>{if(!r.ok)toast(r.error)});
+const startGame=()=>api('start').then(r=>{if(!r.ok)toast(r.error)});
+function copyLink(){const u=location.origin+location.pathname+'?room='+L.code;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('Invite link copied'),()=>toast(u))}
+function renderHome(){$('app').innerHTML=`<div class="menu"><h1>${FIRE} Burn Pile</h1><p>Play online with friends</p><input id="nm" placeholder="Your name" maxlength="16" value="${esc(myName)}">
+ <div class="opts"><button onclick="createRoom()">Create a room</button></div><b>or join a friend’s room</b>
+ <div class="opts"><input id="cd" placeholder="CODE" maxlength="4" style="text-transform:uppercase;width:110px;text-align:center" value="${esc(urlRoom)}"><button onclick="joinRoom()">Join</button></div>
+ <p><a href="home.html" style="color:#d4af37">← Back</a></p></div>`}
+function renderLobby(){const l=L,h=l.host,pn={mixed:'Mixed',conservative:'Conservative',aggressive:'Aggressive',tactical:'Tactical'};
+ const seg=(label,items,cur,key)=>`<b>${label}</b><div class="opts">${items.map(([v,t])=>`<button class="alt ${cur===v?'on':''}" ${h?'':'disabled'} onclick="cfgSet({${key}:${JSON.stringify(v)}})">${t}</button>`).join('')}</div>`;
+ $('app').innerHTML=`<div class="menu" style="max-width:720px"><div class="top"><b>${FIRE} Burn Pile – Online</b><button class="alt" onclick="leaveRoom()">Leave</button></div>
+ <p>Room code</p><div class="code">${l.code}</div><div class="opts"><button class="alt" onclick="copyLink()">Copy invite link</button></div>
+ <h3>Choose your seat</h3><div class="seats">${l.seats.map((s,i)=>`<button class="seat ${s.taken?(s.mine?'mine':'taken'):''}" ${s.taken&&!s.mine?'disabled':''} onclick="takeSeat(${i})"><span style="font-size:26px">${AV[i]}</span><br><b>Player ${i+1}</b><br><small>${s.taken?(s.mine?'You – '+esc(s.name)+'<br>(tap to leave)':esc(s.name)):'Tap to sit here'}</small></button>`).join('')}</div>
+ <p><small>Empty seats are played by the computer.</small></p><p>In the room: ${l.members.map(m=>esc(m.name)+(m.host?' ★':'')+(m.online?'':' (offline)')).join(', ')}</p>
+ ${seg('Players',[2,3,4,5,6].map(n=>[n,n]),l.n,'n')}${seg('AI difficulty',[['easy','Easy'],['normal','Normal'],['hard','Hard']],l.cfg.diff,'diff')}
+ ${seg('AI personalities',Object.entries(pn),l.cfg.pers,'pers')}${seg('AI speed',[[900,'Fast'],[1600,'Normal'],[2400,'Slow']],l.cfg.aiMs,'aiMs')}
+ <div class="opts">${h?'<button onclick="startGame()">Start game</button>':'<span>Waiting for the host to start…</span>'}<button class="alt" onclick="rules()">Rules</button></div></div>`}
+function renderSpectate(){$('app').innerHTML=`<div class="menu"><p>A game is in progress and you didn’t take a seat.</p><div class="opts"><button class="alt" onclick="leaveRoom()">Leave</button></div></div>`}
+function makeSt(v){const n=v.players.length,me=v.me,rot=i=>(i-me+n)%n;
+ const players=v.players.map((_,k)=>{const p=v.players[(me+k)%n];return{index:k,seat:p.index,name:p.name,controller:p.controller,personality:p.personality,finished:p.finished,place:p.place,
+  hand:p.index===me?p.hand:Array(p.handCount).fill({}),faceUp:p.faceUp,faceDown:p.faceDownIds.map(id=>({id}))}});
+ return{players,phase:v.phase,current:rot(v.current),direction:v.direction,effRank:v.effRank,restriction:v.restriction,opening:v.opening,pile:v.pile,burned:Array(v.burnedCount).fill({}),
+  refill:false,drawPile:[],log:v.log||[],loser:v.loser==null?null:rot(v.loser),finishOrder:(v.finishOrder||[]).map(rot),adjudicated:v.adjudicated}}
+function onState(v){
+ if(v.type==='lobby'){screen='lobby';L=v;st=null;V=null;queue.length=0;busy=false;pileView=null;firstLoad=true;lastSeq=-1;sSel=new Set();$('modal').innerHTML='';render()}
+ else if(v.type==='spectate'){screen='spectate';render()}
+ else if(v.type==='game'){screen='game';L=null;queue.push(v);pump()}}
+function pump(){while(!busy&&queue.length)applyUpdate(queue.shift())}
+function applyUpdate(v){
+ const R=snap(),first=firstLoad;firstLoad=false;V=v;st=makeSt(v);
+ const have=new Set([...st.players[0].hand,...st.players[0].faceUp].map(c=>c.id));sel=new Set([...sel].filter(i=>have.has(i)));
+ const an=v.anim&&v.anim.seq!==lastSeq?v.anim:null;if(v.anim)lastSeq=v.anim.seq;
+ if(!an||first){render();return}
+ const rot=i=>(i-v.me+v.n)%v.n,ev=an.events.map(e=>e.player===undefined?e:{...e,player:rot(e.player)});
+ const burn=ev.find(e=>e.type==='burn'),rv=ev.find(e=>e.type==='reveal'),pk=ev.find(e=>e.type==='pickup'),items=[],prev=an.prevPile;let hold=null;
+ ev.forEach(e=>{if(e.type==='play')e.cards.forEach((id,i)=>items.push({id,p:e.player,z:e.zone,i}))});
+ if(burn){hold=prev.concat(items.map(x=>an.played[x.id]).filter(Boolean)).map(c=>({...c,burning:true}));toast(FIRE+' Pile burned!')}
+ else if(rv&&pk){hold=prev.concat([{...rv.card,as:rv.card.rank,bad:true}]);items.push({id:rv.card.id,p:rv.player,z:'faceDown',i:0})}
+ const fb=!!(pk&&pk.count>0);if(fb&&!hold)hold=prev.slice();
+ if(rv)toast(`${st.players[rv.player].name} revealed ${LBL[rv.card.rank]||rv.card.rank}${rv.card.rank==='JOKER'?'':' '+(SYM[rv.card.suit]||'')}`);
+ pileView=hold;render();items.forEach(x=>fly(x,R));
+ if(!items.length&&!hold)return;
+ const animT=items.length?(items.some(x=>x.z==='faceDown')?1300:520+110*items.length):0,stay=hold?(burn?450:rv?650:300):100;
+ busy=true;if(fb)setTimeout(()=>flyBack(pk.player),animT+stay);if(burn)setTimeout(flyBurn,animT+stay);
+ setTimeout(()=>{busy=false;if(hold){pileView=null;flash=!!burn;render()}pump()},animT+stay+(fb?850:0)+(burn?750:0))}
+async function doAct(_,a,o){if(busy)return false;if(a.target!==undefined)a.target=(V.me+a.target)%V.n;
+ const r=await api('act',{action:a});if(!r.ok){toast(cfg.hints?r.error:'That move isn’t allowed.');return false}sel.clear();return true}
+async function confirmSetup(){if(sSel.size!==3)return;const r=await api('act',{action:{type:'faceUp',ids:[...sSel]}});if(!r.ok)toast(r.error)}
+async function playSel(){if(st.current!==0||busy)return;const me=st.players[0],zone=V.zone,ids=[...sel],cards=ids.map(id=>me[zone].find(c=>c.id===id)).filter(Boolean);
+ const real=cards.filter(c=>c.rank!=='JOKER');let as;
+ if(!real.length){as=await ask('🃏 Joker – it can be any card. Choose its rank',jopts().concat([[null,'Cancel']]));if(!as)return}
+ const rank=real.length?real[0].rank:as,total=me.hand.length+me.faceUp.length+me.faceDown.length,forced=ids.length===total&&cards.some(c=>['6','9','JOKER'].includes(c.rank));
+ const ok=forced||V.moves.some(m=>m.ids.length===ids.length&&ids.every(i=>m.ids.includes(i))&&m.rank===rank);
+ if(!ok){toast(cfg.hints?'That play isn’t legal right now.':'That move isn’t allowed.');return}
+ if(forced&&!await ask('You can’t finish with a 6, 9 or Joker. Playing it means picking up the pile.',[[1,'Pick up'],[0,'Cancel']]))return;
+ let target,direction;
+ if(!forced){const o=st.players.filter(q=>!q.finished&&q.index!==0);
+  if(rank==='A'&&o.length>1)target=await ask('Ace – who plays next?',o.map(q=>[q.index,AV[q.seat]+' '+q.name+' ('+E.cardsLeft(q)+')']));
+  if(st.opening)direction=await ask('Choose the direction of play',[['cw','↻ Clockwise'],['ccw','↺ Anticlockwise']])}
+ doAct(0,{type:'play',ids,asRank:as,target,direction})}
+document.addEventListener('click',e=>{const el=e.target.closest('.card[data-id]');if(!el||!st||busy)return;const id=+el.dataset.id,z=el.dataset.zone;
+ if(st.phase==='setup'&&z==='setup'){if(V.ready[V.me])return;sSel.has(id)?sSel.delete(id):sSel.size<3&&sSel.add(id);render();return}
+ if(st.phase!=='play'||st.current!==0||z!==V.zone)return;
+ if(z==='faceDown'){doAct(0,{type:'flip',id});return}
+ const me=st.players[0],c=me[z].find(x=>x.id===id);if(!c)return;if(sel.has(id))sel.delete(id);else{
+  const other=[...sel].map(i=>me[z].find(x=>x.id===i)).find(x=>x&&x.rank!=='JOKER');if(other&&c.rank!=='JOKER'&&other.rank!==c.rank)sel.clear();sel.add(id)}render()});
+(async()=>{try{S=JSON.parse(localStorage.getItem('bp_online')||'null')}catch(e){S=null}
+ if(S){const r=await api('hello').catch(()=>({ok:false}));if(r.ok){render();connect();return}localStorage.removeItem('bp_online');S=null}
+ screen='home';render()})();
+function snap(){const r={};document.querySelectorAll('.card[data-id]').forEach(el=>r[el.dataset.id]=el.getBoundingClientRect());document.querySelectorAll('[data-of]').forEach(el=>r['of'+el.dataset.of]=el.getBoundingClientRect());document.querySelectorAll('[data-oh]').forEach(el=>r['oh'+el.dataset.oh]=el.getBoundingClientRect());return r}
+function fly(x,R){const el=document.querySelector(`.pile .card[data-id="${x.id}"]`);if(!el)return;
+ const s=R[x.id]||(x.z==='faceDown'?R['of'+x.p]:R['oh'+x.p])||R['oh'+x.p]||{left:innerWidth/2,top:innerHeight,width:60,height:84},d=el.getBoundingClientRect(),
+ dx=s.left+s.width/2-d.left-d.width/2,dy=s.top+s.height/2-d.top-d.height/2,k=Math.min(1,Math.max(.35,s.width/d.width)),T=(sc,rot)=>`translate(${dx}px,${dy}px) scale(${sc}) rotateY(${rot}deg)`;el.style.zIndex=20;
+ el.animate(x.z==='faceDown'?[{transform:T(1.25,90),offset:0},{transform:T(1.25,0),offset:.3},{transform:T(1.25,0),offset:.55},{transform:'none'}]:[{transform:T(k,0)},{transform:'none'}],
+  {duration:x.z==='faceDown'?1300:520,delay:x.i*110,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})}
+function flyBurn(){const T=document.querySelector('.burnpile .deck,.burnpile .slot');if(!T)return;const t=T.getBoundingClientRect();
+ document.querySelectorAll('.pile .card').forEach((el,i)=>{const d=el.getBoundingClientRect(),dx=t.left+t.width/2-d.left-d.width/2,dy=t.top+t.height/2-d.top-d.height/2;el.style.zIndex=20;el.classList.add('burning');
+  el.animate([{transform:'none',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.6) rotate(${i*18}deg)`,opacity:.3}],{duration:600,delay:i*50,easing:'ease-in',fill:'forwards'})})}
+function flyBack(p){const T=p===0?document.querySelector('.me .hand'):document.querySelector(`[data-oh="${p}"]`);if(!T)return;const t=T.getBoundingClientRect();
+ document.querySelectorAll('.pile .card').forEach((el,i)=>{el.classList.add('bad');const d=el.getBoundingClientRect(),dx=t.left+t.width/2-d.left-d.width/2,dy=t.top+t.height/2-d.top-d.height/2;el.style.zIndex=20;
+  el.animate([{transform:'none',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(.55)`,opacity:.25}],{duration:550,delay:i*45,easing:'ease-in',fill:'forwards'})})}
+
+</script></body></html>
